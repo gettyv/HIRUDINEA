@@ -66,11 +66,17 @@ for v = 1:n_v
     tau_friction(:,v) = frix(tau(:,v), 0);
     f_r_friction(:,v) = frix(f_r(:,v), 0);
 
-    cross_p = cross(B(:,index), tau_friction(:,v));
+    cross_p = cross(B(:,index), tau(:,v));
     b = B(:,index);
     b_dot = B_dot(:,index);    
 
-    r_ddot_m(:,v) = (f_r_friction(:,v) -mu * R_dot(:,v))/ m;
+    tangent_unit_vector = B(:,index+2) / norm(B(:,index+2));
+    perp_unit_vector = rotz(90) * B(:,index+2) / norm(B(:,index+2));
+
+    tangent_mu = 0.1;
+    perp_mu = 1.6;
+
+    r_ddot_m(:,v) = (f_r(:,v) - tangent_mu * dot(R_dot(:,v), tangent_unit_vector) * tangent_unit_vector - perp_mu * dot(R_dot(:,v), perp_unit_vector) * perp_unit_vector)/ m;
     b_ddot_m(:,v) = -(cross_p/(J*(norm(b))^2))-b*(norm(b_dot)^2)/(norm(b)^2) - t_mu * b_dot;
 end
 

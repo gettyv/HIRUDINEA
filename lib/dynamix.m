@@ -6,6 +6,21 @@ function out = dynamix(t, state, W, psi, C_S, Y, gamma, J, m, t_mu, mu, ol_f, ol
 %   be, then returns those accelerations.
 %   ol_fn is a function that can be called in the form f(f*t + phi)
 
+
+% Rotation matrices
+% Hardcoded for computation time
+rotz_120 = [[-0.5, -0.866, 0],
+            [0.8660, -0.5, 0],
+            [0, 0, 1]];
+rotz_n120 = [[-0.5, 0.866, 0],
+            [-0.8660, -0.5, 0],
+            [0, 0, 1]];
+rotz_90 = [[0, -1, 0],
+            [1, 0, 0],
+            [0, 0, 1]];
+
+
+
 % Extract # of vertebrae from W size
 n_v = size(W, 2) / 3;
 
@@ -23,12 +38,12 @@ for v = 1:n_v
     R_dot(:,v) = state(:, n_v*2 + v);
 
     B(:,(3*v)-2) = state(:,n_v + v);
-    B(:,(3*v)-1) = rotz(120) * state(:,n_v + v);
-    B(:,(3*v)-0) = rotz(-120) * state(:,n_v + v);
+    B(:,(3*v)-1) = rotz_120 * state(:,n_v + v);
+    B(:,(3*v)-0) = rotz_n120 * state(:,n_v + v);
 
     B_dot(:,(3*v)-2) = state(:,n_v*3 + v);
-    B_dot(:,(3*v)-1) = rotz(120) * state(:,n_v*3 + v);
-    B_dot(:,(3*v)-0) = rotz(-120) * state(:,n_v*3 + v);
+    B_dot(:,(3*v)-1) = rotz_120 * state(:,n_v*3 + v);
+    B_dot(:,(3*v)-0) = rotz_n120 * state(:,n_v*3 + v);
 end
 Q = [R B];
 Q_dot = [R_dot B_dot];
@@ -63,15 +78,15 @@ for v = 1:n_v
     tau(:,v) = cross(B(:,index), f_b(:,index)) + cross(B(:,index+1), f_b(:,index+1)) + cross(B(:,index+2), f_b(:,index+2));
 
     % Apply friction to sliding and rotating actions
-    tau_friction(:,v) = frix(tau(:,v), 0);
-    f_r_friction(:,v) = frix(f_r(:,v), 0);
+    %tau_friction(:,v) = frix(tau(:,v), 0);
+    %f_r_friction(:,v) = frix(f_r(:,v), 0);
 
     cross_p = cross(B(:,index), tau(:,v));
     b = B(:,index);
     b_dot = B_dot(:,index);    
 
     tangent_unit_vector = B(:,index+2) / norm(B(:,index+2));
-    perp_unit_vector = rotz(90) * B(:,index+2) / norm(B(:,index+2));
+    perp_unit_vector = rotz_90 * B(:,index+2) / norm(B(:,index+2));
 
     tangent_mu = 0.1;
     perp_mu = 1.6;
